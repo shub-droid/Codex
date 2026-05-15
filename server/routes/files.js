@@ -10,6 +10,7 @@ import {
     setWorkingDir,
     getWorkingDir,
     getAllFiles,
+    resetToNewSession,
 } from '../services/fileManager.js';
 
 /**
@@ -23,6 +24,20 @@ export default function createFileRoutes(io) {
         io.emit('files:changed', { action, path: filePath, ...extra });
     }
 
+    // ── Start a fresh session (empty project) ────────────
+    router.post('/new-session', (_req, res) => {
+        try {
+            const workingDir = resetToNewSession();
+            const tree = getFileTree();
+            emitChange('new-session', workingDir);
+            io.emit('terminal:chdir', { dir: workingDir });
+            res.json({ success: true, workingDir, tree });
+        } catch (error) {
+            console.error('New Session Error:', error);
+            res.status(500).json({ error: error.message });
+        }
+    });
+
     // ── Open a folder from disk (path-based) ─────────────
     router.post('/open-folder', (req, res) => {
         try {
@@ -33,8 +48,10 @@ export default function createFileRoutes(io) {
 
             setWorkingDir(folderPath);
             const tree = getFileTree();
+            const wd = getWorkingDir();
             emitChange('open-folder', folderPath);
-            res.json({ success: true, workingDir: getWorkingDir(), tree });
+            io.emit('terminal:chdir', { dir: wd });
+            res.json({ success: true, workingDir: wd, tree });
         } catch (error) {
             console.error('Open Folder Error:', error);
             res.status(500).json({ error: error.message });

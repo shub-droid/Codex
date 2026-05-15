@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../services/api.js';
+import { newSessionAPI } from '../services/api.js';
 
 const AuthContext = createContext(null);
 
@@ -30,6 +31,10 @@ export function AuthProvider({ children }) {
 
       setUser(data);
       localStorage.setItem('userInfo', JSON.stringify(data));
+
+      // Reset server to a fresh empty project directory
+      try { await newSessionAPI(); } catch { /* ignore if fails */ }
+
       navigate('/editor');
       return { success: true };
     } catch (err) {
@@ -45,6 +50,10 @@ export function AuthProvider({ children }) {
 
       setUser(data);
       localStorage.setItem('userInfo', JSON.stringify(data));
+
+      // Reset server to a fresh empty project directory
+      try { await newSessionAPI(); } catch { /* ignore if fails */ }
+
       navigate('/editor');
       return { success: true };
     } catch (err) {

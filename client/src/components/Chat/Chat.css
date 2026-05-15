@@ -107,6 +107,16 @@
     padding: 0;
 }
 
+/* Dim run-command line inside assistant success bubbles */
+.chat-msg--assistant .chat-msg__bubble {
+    position: relative;
+}
+
+/* The "▸ To run: ..." line rendered via pre-wrap newline */
+.chat-msg--assistant .chat-msg__bubble::after {
+    content: none; /* no pseudo element needed — pre-wrap handles it */
+}
+
 /* ── Loading indicator ──────────────────────────────── */
 .chat__loading {
     display: flex;
@@ -151,6 +161,30 @@
         opacity: 1;
         transform: scale(1);
     }
+}
+
+.chat__loading-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat__progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.chat__progress-phase {
+    font-weight: 600;
+    color: var(--accent-primary);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.chat__progress-msg {
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
 }
 
 /* ── Input area ─────────────────────────────────────── */
@@ -259,4 +293,236 @@
     right: 0;
     height: 2px;
     background: var(--accent-primary);
+}
+
+/* ── Preview card (Accept / Reject) ─────────────────── */
+.chat-preview {
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-lg);
+    background: var(--bg-tertiary);
+    overflow: hidden;
+    animation: msgFade 200ms ease;
+    margin: 2px 0;
+}
+
+.chat-preview__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border-default);
+}
+
+.chat-preview__title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    line-height: 1.4;
+}
+
+.chat-preview__badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.chat-preview__files {
+    padding: var(--space-xs) 0;
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.chat-preview__file {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-sm);
+    padding: 5px var(--space-md);
+    transition: background var(--transition-fast);
+}
+
+.chat-preview__file:hover {
+    background: var(--bg-hover);
+}
+
+.chat-preview__file-icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+    opacity: 0.8;
+}
+
+.chat-preview__file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.chat-preview__file-path {
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.chat-preview__file-desc {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chat-preview__cwd {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px var(--space-md);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    border-top: 1px solid var(--border-muted);
+    border-bottom: 1px solid var(--border-muted);
+    background: rgba(0,0,0,0.15);
+}
+
+.chat-preview__cwd code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-accent);
+}
+
+/* Run command hint — small muted line below CWD */
+.chat-preview__runcmd {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px var(--space-md);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    border-bottom: 1px solid var(--border-muted);
+    background: rgba(0,0,0,0.10);
+    opacity: 0.85;
+}
+
+.chat-preview__runcmd span {
+    color: var(--text-tertiary);
+}
+
+.chat-preview__runcmd code {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-secondary);
+    letter-spacing: 0.2px;
+}
+
+.chat-preview__actions {
+    display: flex;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+}
+
+.chat-preview__btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 14px;
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: none;
+}
+
+.chat-preview__btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.chat-preview__btn--accept {
+    background: linear-gradient(135deg, #238636, #2ea043);
+    color: #fff;
+    flex: 1;
+    justify-content: center;
+    box-shadow: 0 0 0 1px rgba(63,185,80,0.3);
+}
+
+.chat-preview__btn--accept:hover:not(:disabled) {
+    background: linear-gradient(135deg, #2ea043, #3fb950);
+    box-shadow: 0 0 12px rgba(63,185,80,0.3);
+    transform: translateY(-1px);
+}
+
+.chat-preview__btn--reject {
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+}
+
+.chat-preview__btn--reject:hover:not(:disabled) {
+    background: rgba(239,68,68,0.1);
+    color: #ef4444;
+    border-color: #ef4444;
+}
+
+/* ── Run command bar ─────────────────────────────────── */
+.chat-run-bar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: 8px var(--space-md);
+    background: rgba(99,102,241,0.08);
+    border: 1px solid var(--border-accent);
+    border-radius: var(--radius-md);
+    animation: msgFade 200ms ease;
+}
+
+.chat-run-bar__cmd {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: var(--font-size-xs);
+    color: var(--text-accent);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chat-run-bar__btn {
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #fff;
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: none;
+    white-space: nowrap;
+}
+
+.chat-run-bar__btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px rgba(99,102,241,0.4);
+}
+
+.chat-run-bar__dismiss {
+    display: flex;
+    align-items: center;
+    color: var(--text-tertiary);
+    cursor: pointer;
+    padding: 2px;
+    background: none;
+    border: none;
+    transition: color var(--transition-fast);
+}
+
+.chat-run-bar__dismiss:hover {
+    color: var(--text-primary);
 }

@@ -47,9 +47,16 @@ export function FileProvider({ children }) {
             refreshTree();
         }
 
+        function handleChdir({ dir } = {}) {
+            if (dir) setProjectRoot(dir);
+            refreshTree();
+        }
+
         socket.on('files:changed', handleFilesChanged);
+        socket.on('terminal:chdir', handleChdir);
         return () => {
             socket.off('files:changed', handleFilesChanged);
+            socket.off('terminal:chdir', handleChdir);
         };
     }, [refreshTree]);
 

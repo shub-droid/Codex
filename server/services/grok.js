@@ -3,51 +3,100 @@ import dotenv from 'dotenv';
 
 dotenv.config({ path: '../.env' });
 
-// ── Groq client ──────────────────────────────────────
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '' });
+// ── Groq client ─────────────
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY || '',
+    timeout: 110_000,
+});
 
 const MODEL = 'llama-3.3-70b-versatile';
 
-const SYSTEM_PROMPT = `You are an expert MERN stack developer assistant embedded in a web-based IDE called "Codex".
-Your job is to help users build full-stack applications by generating high-quality, production-ready code.
+// ── Smart stack selection rules (shared across prompts) ──────────────────────
+const STACK_RULES = `
+STACK SELECTION — follow these rules strictly before planning:
 
-Rules:
-1. Always generate complete, working files — never use placeholders or "// TODO" comments.
-2. Use modern JavaScript/React best practices (functional components, hooks, ES modules).
-3. For the backend, use Express.js with ES module syntax (import/export).
-4. For the frontend, use React with Vite.
-5. Always include proper error handling.
-6. When generating multiple files, clearly separate them and specify their file paths.
-7. Use clean, well-commented code with consistent formatting.
-8. For styling, use modern CSS with CSS variables for theming.
-9. CRITICAL: When generating a Node.js or React project, you MUST ALWAYS generate the \`package.json\` file with all required dependencies, for BOTH the client and server directories.
-10. CRITICAL: If the project requires a build tool like Vite, you MUST generate its configuration file (e.g., \`vite.config.js\`).
-11. CRITICAL: The Codex IDE server strictly runs on port 3001. When generating backend services (like Express), you MUST use a different port (e.g., 5000, 8080) to avoid \`EADDRINUSE\` conflicts. Never use port 3001.
-12. CRITICAL: For React frontend code, you MUST use the \`.jsx\` file extension for any file containing JSX syntax (e.g., \`App.jsx\`, \`main.jsx\`). Vite will fail to parse JSX if the file extension is strictly \`.js\`.
+"html" (single file, no npm needed):
+  → Counter, calculator, clock, timer, stopwatch, color picker, quiz, simple game,
+    form validation demo, CSS animation, landing page, static info page, unit converter,
+    anything doable in ≤ 1 file with inline CSS + vanilla JS.
+  → Output ONE descriptively-named HTML file (e.g. counter.html, portfolio.html,
+    calculator.html, quiz.html). Use index.html ONLY for generic landing pages.
+    No package.json. No build step.
 
-Response Format:
-When generating code, respond with a JSON object:
+"react" (Vite + React, no backend):
+  → Multi-page SPA, dashboard with complex component tree, apps needing client-side routing
+    or significant shared state. Must NOT need a real server or database.
+  → Output a client/ folder with Vite + React + package.json.
+
+"fullstack" (React frontend + Express backend):
+  → User authentication, persistent data storage, real REST APIs, real-time features,
+    server-side logic that cannot run in the browser.
+  → Output client/ + server/ with separate package.json files.
+
+RULE: When in doubt, always pick the simpler stack. Most UI demos are "html". Most CRUD apps without user accounts are "react". Only use "fullstack" when a real server is genuinely required.`;
+
+// ── Prompts ──────────────────────────────────────────────────────────────────
+
+const SMART_PLANNER_PROMPT = `You are a developer assistant embedded in the Codex IDE.
+Your job is to analyse the user's request and return a concise project plan JSON.
+
+${STACK_RULES}
+
+CODE QUALITY RULES:
+- Always generate complete, working files with no placeholders.
+- Use modern JS best practices.
+- For "html" stack: beautiful, premium design with CSS variables, smooth animations.
+- For "react"/"fullstack": use Vite, functional components, hooks.
+- CRITICAL: Codex IDE runs on port 3001 (server) and 5173 (client). Generated apps must use different ports (e.g. 3000 for Vite, 8080 for Express).
+
+RESPONSE — return ONLY this JSON (no markdown, no extra text):
 {
-  "explanation": "Brief description of what was created/changed",
+  "explanation": "One sentence describing what will be built",
+  "stack": "html" | "react" | "fullstack",
   "files": [
-    {
-      "path": "server/package.json",
-      "content": "{\n  \"name\": \"my-app-server\",\n  \"dependencies\": { ... }\n}",
-      "action": "create"
-    },
-    {
-      "path": "relative/path/to/file.js",
-      "content": "// file content here",
-      "action": "create" | "update" | "delete"
-    }
-  ]
+    { "path": "counter.html", "description": "What this file does" }
+  ],
+  "runCommand": "command to open/run after files are created"
 }
 
-When answering questions or debugging, respond with plain text markdown.`;
+FILE NAMING for html stack — derive the filename from the request:
+  "create a counter"     → counter.html
+  "build a portfolio"    → portfolio.html
+  "make a calculator"    → calculator.html
+  "create a quiz app"    → quiz.html
+  "build a clock"        → clock.html
+  Generic/unclear        → index.html
 
-/**
- * Retry wrapper — handles 429 rate-limit errors with exponential backoff
- */
+runCommand examples:
+  html      → "start \"\" counter.html"   (use the actual filename, not index.html)
+  react     → "npm install && npm run dev"
+  fullstack → "npm install --prefix client && npm install --prefix server && npm run dev --prefix server"`;
+
+const FILE_GENERATOR_PROMPT = `You are an expert developer assistant embedded in the Codex IDE.
+Generate a SINGLE, complete, production-ready file based on the project plan below.
+
+RULES:
+1. Generate the COMPLETE file — no placeholders, no "// TODO", no truncation.
+2. Follow the project plan's stack and architecture.
+3. Beautiful, premium UI for HTML/CSS (CSS variables, smooth transitions, responsive).
+4. CRITICAL ports: Vite on 3000, Express on 8080 (never 3001 or 5173).
+5. Respond ONLY with valid JSON — no markdown fences, no extra text.
+
+RESPONSE FORMAT:
+{
+  "explanation": "Brief note on what was implemented",
+  "file": {
+    "path": "relative/path/to/file.ext",
+    "content": "complete file content here",
+    "action": "create"
+  }
+}`;
+
+const CHAT_PROMPT = `You are an expert developer assistant embedded in the Codex IDE called "Codex".
+Help the user with code questions, debugging, and explanations.
+Respond in clear, helpful markdown. Do NOT generate JSON or file structures in chat mode.`;
+
+// ── Retry wrapper ─────────────────────────────────────────────────────────────
 async function withRetry(fn, retries = 3) {
     for (let attempt = 0; attempt <= retries; attempt++) {
         try {
@@ -56,12 +105,10 @@ async function withRetry(fn, retries = 3) {
             const is429 = err?.status === 429 ||
                 err?.message?.includes('429') ||
                 err?.message?.includes('Too Many Requests') ||
-                err?.message?.includes('RESOURCE_EXHAUSTED') ||
                 err?.message?.includes('rate_limit');
-
             if (is429 && attempt < retries) {
-                const delay = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
-                console.log(`⏳ Rate limited, retrying in ${delay / 1000}s (attempt ${attempt + 1}/${retries})...`);
+                const delay = Math.pow(2, attempt) * 2000;
+                console.log(`⏳ Rate limited, retrying in ${delay / 1000}s…`);
                 await new Promise((r) => setTimeout(r, delay));
                 continue;
             }
@@ -70,61 +117,125 @@ async function withRetry(fn, retries = 3) {
     }
 }
 
+// ── parseJSON helper ──────────────────────────────────────────────────────────
+function parseJSON(text) {
+    let cleaned = text.trim();
+    // Strip markdown code fences if present
+    cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '');
+    const first = cleaned.indexOf('{');
+    const last  = cleaned.lastIndexOf('}');
+    if (first !== -1 && last !== -1 && last > first) {
+        cleaned = cleaned.slice(first, last + 1);
+    }
+    return JSON.parse(cleaned);
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
 /**
- * Chat with Groq AI — general conversation / debugging
+ * Chat with AI — general conversation / debugging (no file generation)
  */
 export async function chatWithAI(message, context = {}) {
     return withRetry(async () => {
-        const userMessage = context.mode === 'debug'
-            ? message
-            : `${message}`;
-
-        const chatCompletion = await groq.chat.completions.create({
+        const completion = await groq.chat.completions.create({
             model: MODEL,
             messages: [
-                { role: 'system', content: SYSTEM_PROMPT },
-                { role: 'user', content: userMessage },
+                { role: 'system', content: CHAT_PROMPT },
+                { role: 'user',   content: message },
             ],
             temperature: 0.7,
             max_tokens: 4096,
         });
-
-        const text = chatCompletion.choices[0]?.message?.content || '';
+        const text = completion.choices[0]?.message?.content || '';
         return { message: text };
     });
 }
 
 /**
- * Generate code — structured output for the agent
+ * Phase 1 — Smart planner.
+ * Returns a plan with stack type and file list (no content yet).
  */
-export async function generateCode(prompt, projectFiles = {}) {
+export async function planAndPreview(prompt) {
     return withRetry(async () => {
-        const fileContext = Object.keys(projectFiles).length > 0
-            ? `\n\nCurrent project files:\n${Object.entries(projectFiles)
-                .map(([path, content]) => `--- ${path} ---\n${content}`)
-                .join('\n\n')}`
-            : '';
-
-        const fullPrompt = `${fileContext}\n\nUser request: ${prompt}\n\nRespond ONLY with valid JSON matching the response format described above.`;
-
-        const chatCompletion = await groq.chat.completions.create({
+        const completion = await groq.chat.completions.create({
             model: MODEL,
             messages: [
-                { role: 'system', content: SYSTEM_PROMPT },
-                { role: 'user', content: fullPrompt },
+                { role: 'system', content: SMART_PLANNER_PROMPT },
+                { role: 'user',   content: `User request: ${prompt}\n\nRespond ONLY with the JSON plan.` },
             ],
-            temperature: 0.7,
+            temperature: 0.3,   // low temp → more deterministic stack choice
+            max_tokens: 1000,
+        });
+
+        const text = completion.choices[0]?.message?.content || '';
+        try {
+            return parseJSON(text);
+        } catch (e) {
+            console.error('[grok] planAndPreview parse error:', e.message);
+            // Fallback: html single file
+            return {
+                explanation: prompt,
+                stack: 'html',
+                files: [{ path: 'index.html', description: 'Main application file' }],
+                runCommand: '',
+            };
+        }
+    });
+}
+
+/**
+ * Phase 2 — Generate a single file's full content.
+ */
+export async function generateSingleFile(fileSpec, plan, originalPrompt, projectFiles = {}) {
+    return withRetry(async () => {
+        const fileCtx = Object.keys(projectFiles).length > 0
+            ? `\n\nExisting project files:\n${Object.entries(projectFiles)
+                .map(([p, c]) => `--- ${p} ---\n${c}`).join('\n\n')}`
+            : '';
+
+        const userMsg = `${fileCtx}
+
+Original request: ${originalPrompt}
+
+Project plan:
+${JSON.stringify(plan, null, 2)}
+
+Generate this file now:
+${JSON.stringify(fileSpec, null, 2)}
+
+Respond ONLY with the JSON object.`;
+
+        const completion = await groq.chat.completions.create({
+            model: MODEL,
+            messages: [
+                { role: 'system', content: FILE_GENERATOR_PROMPT },
+                { role: 'user',   content: userMsg },
+            ],
+            temperature: 0.5,
             max_tokens: 8192,
         });
 
-        const text = chatCompletion.choices[0]?.message?.content || '';
-
-        // Try to parse as JSON, fall back to raw text
+        const text = completion.choices[0]?.message?.content || '';
         try {
-            const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-            return JSON.parse(cleaned);
-        } catch {
-            return { message: text };
+            return parseJSON(text);
+        } catch (e) {
+            console.error(`[grok] generateSingleFile parse error for ${fileSpec.path}:`, e.message);
+            return { file: null };
         }
     });
+}
+
+/**
+ * Legacy: generate code (used by old /generate route, kept for compatibility)
+ */
+export async function generateCode(prompt, projectFiles = {}) {
+    // Delegate to planAndPreview — caller handles differently
+    return planAndPreview(prompt);
+}
+
+/**
+ * Legacy: planProject (alias kept for agent.js compatibility)
+ */
+export async function planProject(prompt, projectFiles = {}) {
+    return planAndPreview(prompt);
 }

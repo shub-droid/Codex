@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { VscCode, VscWand, VscRocket, VscDeviceMobile } from 'react-icons/vsc';
 import { useAuth } from '../../context/AuthContext.jsx';
 import AuthModal from '../Auth/AuthModal.jsx';
+import ThemeToggle from '../common/ThemeToggle.jsx';
 import './LandingPage.css';
 
 const features = [
@@ -66,6 +67,7 @@ export default function LandingPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
         >
+          <ThemeToggle />
           <button className="btn btn-secondary" onClick={() => navigate('/docs')}>
             Documentation
           </button>

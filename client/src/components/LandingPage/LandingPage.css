@@ -333,3 +333,130 @@
     height: 300px;
   }
 }
+
+/* Theme Toggle Button (Landing Page) */
+.theme-toggle-landing {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: inherit;
+  font-size: 1.1rem;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 1;
+  padding: 0;
+}
+
+.theme-toggle-landing:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: rotate(20deg) scale(1.1);
+}
+
+/* ── Light Mode Overrides (Landing Page) ──────────────── */
+[data-theme="light"] .landing-container {
+  background-color: #f8faff;
+  color: #1c2333;
+}
+
+[data-theme="light"] .landing-nav {
+  background: rgba(248, 250, 255, 0.85);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+[data-theme="light"] .orb-1 {
+  background: radial-gradient(circle, #818cf8 0%, rgba(129, 140, 248, 0) 70%);
+  opacity: 0.25;
+}
+
+[data-theme="light"] .orb-2 {
+  background: radial-gradient(circle, #c084fc 0%, rgba(192, 132, 252, 0) 70%);
+  opacity: 0.2;
+}
+
+[data-theme="light"] .badge {
+  background: rgba(99, 102, 241, 0.08);
+  color: #4f46e5;
+  border-color: rgba(99, 102, 241, 0.2);
+}
+
+[data-theme="light"] .hero-title {
+  color: #111827;
+}
+
+[data-theme="light"] .hero-subtitle {
+  color: #4b5563;
+}
+
+[data-theme="light"] .btn-secondary {
+  background: rgba(0, 0, 0, 0.04);
+  color: #374151;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .btn-secondary:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .browser-mockup {
+  background: #f1f5f9;
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 40px rgba(99, 102, 241, 0.08);
+}
+
+[data-theme="light"] .browser-header {
+  background: #e2e8f0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .url-bar {
+  background: #cbd5e1;
+  color: #475569;
+}
+
+[data-theme="light"] .mockup-sidebar {
+  background: #e2e8f0;
+  border-right: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+[data-theme="light"] .mockup-editor {
+  background: #f8faff;
+  color: #1e293b;
+}
+
+[data-theme="light"] .code-line span {
+  color: #7c3aed;
+}
+
+[data-theme="light"] .feature-card {
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .feature-card:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .feature-title {
+  color: #111827;
+}
+
+[data-theme="light"] .feature-desc {
+  color: #4b5563;
+}
+
+[data-theme="light"] .theme-toggle-landing {
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .theme-toggle-landing:hover {
+  background: rgba(0, 0, 0, 0.1);
+}

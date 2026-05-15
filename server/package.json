@@ -11,13 +11,15 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "@google/genai": "^1.51.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "express": "^4.21.2",
-    "groq-sdk": "^0.8.0",
+    "groq-sdk": "^1.1.2",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.2.4",
+    "node-pty": "^1.1.0",
     "openai": "^6.27.0",
     "socket.io": "^4.8.1"
   },

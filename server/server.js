@@ -10,6 +10,7 @@ import createFileRoutes from './routes/files.js';
 import createPreviewRoutes from './routes/preview.js';
 import authRoutes from './routes/auth.js';
 import { protect } from './middleware/auth.js';
+import { registerTerminalHandlers } from './routes/terminal.js';
 
 dotenv.config({ path: '../.env' });
 
@@ -34,8 +35,8 @@ mongoose
 
 // ── Routes (pass io for real-time file change events) ──
 app.use('/api/auth', authRoutes);
-app.use('/api/ai', protect, createAIRoutes(io));
-app.use('/api/files', protect, createFileRoutes(io));
+app.use('/api/ai', createAIRoutes(io));          // AI routes — open for local use
+app.use('/api/files', createFileRoutes(io));     // File routes — no auth needed (local IDE)
 app.use('/api/preview', createPreviewRoutes(io));
 
 // ── Health check ───────────────────────────────────────
@@ -51,6 +52,9 @@ io.on('connection', (socket) => {
     console.log('❌ Client disconnected:', socket.id);
   });
 });
+
+// ── Terminal (real shell via node-pty) ─────────────────
+registerTerminalHandlers(io);
 
 // ── Start ──────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;

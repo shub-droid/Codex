@@ -1,0 +1,114 @@
+/* ═══════════════════════════════════════════════════════
+   ThemeToggle — Sliding Pill Switch
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Track (the pill container) ─────────────────────── */
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 56px;
+  height: 28px;
+  border-radius: 999px;
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  flex-shrink: 0;
+  overflow: hidden;
+
+  background: #1c2333;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.5), 0 0 0 1.5px #30363d;
+
+  /* Only transition colors — NOT transform (knob handles its own) */
+  transition: background 300ms ease, box-shadow 300ms ease !important;
+}
+
+/* Track in light mode */
+.theme-toggle.theme-toggle--light {
+  background: #dbeafe;
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.1), 0 0 0 1.5px #93c5fd;
+}
+
+/* ── Decorative dots (stars in dark, hidden in light) ── */
+.theme-toggle__dot {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+  transition: opacity 300ms ease !important;
+}
+.theme-toggle__dot:nth-child(1) { width: 3px; height: 3px; top: 7px;  left: 9px;  }
+.theme-toggle__dot:nth-child(2) { width: 2px; height: 2px; top: 16px; left: 14px; }
+.theme-toggle__dot:nth-child(3) { width: 2px; height: 2px; top: 10px; left: 18px; }
+
+.theme-toggle--light .theme-toggle__dot {
+  opacity: 0;
+}
+
+/* ── Knob ───────────────────────────────────────────── */
+.theme-toggle__knob {
+  position: absolute;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+
+  /* Dark knob: indigo/violet */
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.55), 0 0 10px rgba(99, 102, 241, 0.5);
+
+  /* Slide + color, immune to global overrides */
+  transition:
+    transform  320ms cubic-bezier(0.34, 1.56, 0.64, 1),
+    background 300ms ease,
+    box-shadow 300ms ease !important;
+
+  will-change: transform;
+}
+
+/* Knob position when DARK (slid to the right) */
+.theme-toggle--dark .theme-toggle__knob {
+  transform: translateX(28px);
+}
+
+/* Knob in light mode: amber/yellow sun */
+.theme-toggle--light .theme-toggle__knob {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.25), 0 0 12px rgba(251, 191, 36, 0.6);
+}
+
+/* ── Icon inside knob ───────────────────────────────── */
+.theme-toggle__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  line-height: 1;
+  user-select: none;
+  /* Override the global transition so icon swaps instantly */
+  transition: opacity 150ms ease !important;
+}
+
+/* ── Active press feedback ──────────────────────────── */
+.theme-toggle:active .theme-toggle__knob {
+  /* Squish slightly on press */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ── Hover glow on knob ─────────────────────────────── */
+.theme-toggle:hover .theme-toggle__knob {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.55), 0 0 16px rgba(99, 102, 241, 0.7) !important;
+}
+.theme-toggle--light:hover .theme-toggle__knob {
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.25), 0 0 18px rgba(251, 191, 36, 0.8) !important;
+}
+
+/* ── Focus ring ─────────────────────────────────────── */
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 3px;
+}

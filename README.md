@@ -88,7 +88,7 @@ Codex/
 
 - Shubham Mallick
 - Subham Sonal Panigrahi
-- Swaraj Banita
+- Subham Swaraj Beuria
 
 ## 📄 License
 

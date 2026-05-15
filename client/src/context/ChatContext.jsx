@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
 import { chatWithAI, generateCode } from '../services/api.js';
+import socket from '../services/socket.js';
 
 const ChatContext = createContext(null);
 
@@ -12,8 +13,20 @@ export function ChatProvider({ children }) {
         },
     ]);
     const [isLoading, setIsLoading] = useState(false);
+    const [generationProgress, setGenerationProgress] = useState(null);
     const [logs, setLogs] = useState([]);   // terminal-style log entries
     const bottomRef = useRef(null);
+
+    /* ── Listen for socket events ───────────────────────── */
+    useEffect(() => {
+        const handleProgress = (data) => {
+            setGenerationProgress(data);
+        };
+        socket.on('generation:progress', handleProgress);
+        return () => {
+            socket.off('generation:progress', handleProgress);
+        };
+    }, []);
 
     /* ── Auto-scroll on new message ─────────────────────── */
     useEffect(() => {
@@ -30,13 +43,33 @@ export function ChatProvider({ children }) {
 
     const clearLogs = useCallback(() => setLogs([]), []);
 
+    /* ── Stable ref lock — avoids isLoading closure-staleness bug ── */
+    const chatLockRef  = useRef(false);
+    const chatTimerRef = useRef(null);
+
     /* ── Send a chat message ────────────────────────────── */
-    const sendMessage = useCallback(async (content) => {
-        if (!content.trim() || isLoading) return;
+    const sendMessage = useCallback(async (content, opts = {}) => {
+        const { skipAI = false, role = 'user' } = opts;
+
+        if (skipAI) {
+            // Just push a message without calling the AI
+            setMessages((prev) => [...prev, { role, content, timestamp: Date.now() }]);
+            return;
+        }
+
+        if (!content.trim() || chatLockRef.current) return;
+
+        chatLockRef.current = true;
+        setIsLoading(true);
+
+        // Safety valve: if Groq API hangs and never resolves, unlock after 30 s
+        chatTimerRef.current = setTimeout(() => {
+            chatLockRef.current = false;
+            setIsLoading(false);
+        }, 30_000);
 
         const userMsg = { role: 'user', content, timestamp: Date.now() };
         setMessages((prev) => [...prev, userMsg]);
-        setIsLoading(true);
         addLog(`💬 User: ${content.slice(0, 80)}...`, 'info');
 
         try {
@@ -58,9 +91,12 @@ export function ChatProvider({ children }) {
             setMessages((prev) => [...prev, errMsg]);
             addLog(`❌ AI error: ${err.message}`, 'error');
         } finally {
+            clearTimeout(chatTimerRef.current);
+            chatLockRef.current = false;
             setIsLoading(false);
         }
-    }, [isLoading, addLog]);
+    }, [addLog]);   // isLoading intentionally removed — chatLockRef is the guard now
+
 
     /* ── Send a code generation request ─────────────────── */
     const sendGenerateRequest = useCallback(async (prompt, currentFiles = null) => {
@@ -69,6 +105,7 @@ export function ChatProvider({ children }) {
         const userMsg = { role: 'user', content: `🔧 Generate: ${prompt}`, timestamp: Date.now() };
         setMessages((prev) => [...prev, userMsg]);
         setIsLoading(true);
+        setGenerationProgress(null);
         addLog(`🔧 Generating code: ${prompt.slice(0, 80)}...`, 'info');
 
         try {
@@ -110,6 +147,7 @@ export function ChatProvider({ children }) {
             return null;
         } finally {
             setIsLoading(false);
+            setGenerationProgress(null);
         }
     }, [isLoading, addLog]);
 
@@ -125,6 +163,7 @@ export function ChatProvider({ children }) {
     const value = {
         messages,
         isLoading,
+        setIsLoading,
         logs,
         bottomRef,
         sendMessage,
@@ -132,6 +171,8 @@ export function ChatProvider({ children }) {
         clearChat,
         addLog,
         clearLogs,
+        generationProgress,
+        setGenerationProgress,
     };
 
     return (

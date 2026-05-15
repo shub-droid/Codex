@@ -3,3 +3,14 @@ node_modules
 dist
 build
 npm-debug.log
+
+# Server runtime files
+server/projects/
+server/error.log
+server/server.log
+server/.workingdir
+server/models.json
+
+# Temp/scratch
+implementation_plan.md
+package-lock.json

@@ -67,15 +67,19 @@ export default function Preview() {
             await writeFilesToWebContainer(wc, tree);
 
             // 4. Start Server depending on project type
-            const hasPackageJson = ('package.json' in allFiles);
+            const hasRootPackageJson = ('package.json' in allFiles);
+            const hasClientPackageJson = ('client/package.json' in allFiles);
 
             if (serverProcessRef.current) {
                 serverProcessRef.current.kill();
             }
 
-            if (hasPackageJson) {
-                setStatusText('Installing dependencies...');
-                const installProcess = await wc.spawn('npm', ['install']);
+            if (hasRootPackageJson || hasClientPackageJson) {
+                const targetDir = hasRootPackageJson ? '.' : 'client';
+                const spawnOpts = targetDir === '.' ? undefined : { cwd: 'client' };
+
+                setStatusText(`Installing dependencies in ${targetDir}...`);
+                const installProcess = await wc.spawn('npm', ['install'], spawnOpts);
 
                 installProcess.output.pipeTo(new WritableStream({
                     write(data) { console.log(`[WC npm install] ${data}`); }
@@ -87,8 +91,8 @@ export default function Preview() {
                 }
 
                 setStatusText('Starting dev server...');
-                // we assume package.json has a "dev" script with vite
-                serverProcessRef.current = await wc.spawn('npm', ['run', 'dev']);
+                // Force port 3000 to avoid collision with CodeX client on port 5173
+                serverProcessRef.current = await wc.spawn('npm', ['run', 'dev', '--', '--port', '3000'], spawnOpts);
                 serverProcessRef.current.output.pipeTo(new WritableStream({
                     write(data) { console.log(`[WC dev] ${data}`); }
                 }));
@@ -245,6 +249,7 @@ export default function Preview() {
                         className="preview__frame"
                         src={previewUrl}
                         title="Live Preview"
+                        allow="cross-origin-isolated"
                         credentialless="true"
                     />
                 )}

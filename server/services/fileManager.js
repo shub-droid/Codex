@@ -51,6 +51,20 @@ function toAbsolute(relativePath) {
 // ── Working Dir Management ─────────────────────────────
 
 /**
+ * Reset to a fresh, empty project directory for a new session.
+ * Creates a new folder under projects/ and sets it as the working dir.
+ */
+export function resetToNewSession() {
+    const sessionId = `project_${Date.now()}`;
+    const sessionDir = path.resolve('projects', sessionId);
+    fs.mkdirSync(sessionDir, { recursive: true });
+    workingDir = sessionDir;
+    try { fs.writeFileSync(WORKINGDIR_FILE, workingDir, 'utf-8'); } catch { /* ignore */ }
+    console.log(`🆕 New session started: ${workingDir}`);
+    return workingDir;
+}
+
+/**
  * Set the working directory to an absolute path on disk.
  */
 export function setWorkingDir(absolutePath) {

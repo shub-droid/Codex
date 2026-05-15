@@ -6,7 +6,7 @@
 
 /* ── Design Tokens ──────────────────────────────────── */
 :root {
-  /* Background layers */
+  /* Background layers — DARK (default) */
   --bg-primary: #0d1117;
   --bg-secondary: #161b22;
   --bg-tertiary: #1c2333;
@@ -78,6 +78,47 @@
   --bottom-panel-height: 200px;
   --tab-height: 36px;
   --statusbar-height: 24px;
+}
+
+/* ── Light Theme Overrides ───────────────────────────── */
+[data-theme="light"] {
+  /* Background layers */
+  --bg-primary: #f6f8fa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #eef0f3;
+  --bg-elevated: #e8ebf0;
+  --bg-hover: #e0e4eb;
+  --bg-active: #d3d8e3;
+
+  /* Text */
+  --text-primary: #1c2333;
+  --text-secondary: #57606a;
+  --text-tertiary: #8c959f;
+  --text-accent: #4f46e5;
+  --text-link: #4f46e5;
+
+  /* Borders */
+  --border-default: #d0d7de;
+  --border-muted: #e8ebf0;
+  --border-accent: #6366f133;
+
+  /* Shadows — lighter for white background */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.1);
+}
+
+/* ── Theme Transition ────────────────────────────────── */
+/* Note: no !important — individual components may need transform transitions */
+*,
+*::before,
+*::after {
+  transition:
+    background-color 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease,
+    box-shadow 220ms ease;
 }
 
 /* ── Global Reset ───────────────────────────────────── */

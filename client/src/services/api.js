@@ -56,19 +56,44 @@ export const importFolderAPI = (folderName, files) =>
 export const fetchProjectInfo = () =>
     API.get('/files/project-info').then((r) => r.data);
 
+export const newSessionAPI = () =>
+    API.post('/files/new-session').then((r) => r.data);
+
 export const fetchAllFiles = () =>
     API.get('/files/all').then((r) => r.data);
 
 /* ── AI operations ────────────────────────────────────── */
 
+const AI_TIMEOUT = 300_000;
+
 export const chatWithAI = (message, context = {}) =>
-    API.post('/ai/chat', { message, context }).then((r) => r.data);
+    API.post('/ai/chat', { message, context }, { timeout: AI_TIMEOUT }).then((r) => r.data);
 
 export const generateCode = (prompt, files = null) =>
-    API.post('/ai/generate', { prompt, files }).then((r) => r.data);
+    API.post('/ai/generate', { prompt, files }, { timeout: AI_TIMEOUT }).then((r) => r.data);
 
 export const debugCode = (error, code, filename) =>
-    API.post('/ai/debug', { error, code, filename }).then((r) => r.data);
+    API.post('/ai/debug', { error, code, filename }, { timeout: AI_TIMEOUT }).then((r) => r.data);
+
+export const suggestCode = (prefix, suffix, language, filename) =>
+    API.post('/ai/suggest', { prefix, suffix, language, filename }, { timeout: 10000 }).then((r) => r.data);
+
+/** Phase 1 — get a plan (no files written yet) */
+export const planGeneration = (prompt) =>
+    API.post('/ai/plan', { prompt }, { timeout: AI_TIMEOUT }).then((r) => r.data);
+
+/** Phase 2 — accept a plan: generate content and write to targetDir */
+export const acceptPlan = (planId, targetDir) =>
+    API.post('/ai/accept', { planId, targetDir }, { timeout: AI_TIMEOUT }).then((r) => r.data);
+
+/** Ask the terminal to run a command automatically */
+export const runInTerminal = (command, socketId) =>
+    API.post('/ai/run-in-terminal', { command, socketId }).then((r) => r.data);
+
+/** Open a file in the OS default app (server-side, bypasses PTY GUI limitations) */
+export const openFileAPI = (filePath) =>
+    API.post('/ai/open-file', { filePath }).then((r) => r.data);
+
 
 /* ── Preview ──────────────────────────────────────────── */
 

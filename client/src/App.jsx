@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { FileProvider } from './context/FileContext.jsx';
 import { ChatProvider } from './context/ChatContext.jsx';
 import { AuthProvider, useAuth } from './context/AuthContext.jsx';
+import { PreviewProvider } from './context/PreviewContext.jsx';
+import { InlineSuggestionProvider } from './context/InlineSuggestionContext.jsx';
 import Layout from './components/Layout/Layout.jsx';
 import LandingPage from './components/LandingPage/LandingPage.jsx';
 import Documentation from './components/Documentation/Documentation.jsx';
@@ -26,7 +28,11 @@ function EditorWorkspace() {
   return (
     <FileProvider>
       <ChatProvider>
-        <Layout />
+        <PreviewProvider>
+          <InlineSuggestionProvider>
+            <Layout />
+          </InlineSuggestionProvider>
+        </PreviewProvider>
       </ChatProvider>
     </FileProvider>
   );
